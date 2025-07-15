@@ -5,7 +5,7 @@
 Initialize the template:
 
 ```bash
-nix flake init -t github:yourusername/dev-templates#base
+nix flake init -t github:jcha0713/nix-dev-templates#base
 ```
 
 Allow direnv:
