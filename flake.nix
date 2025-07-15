@@ -13,6 +13,14 @@
           path = ./templates/bun;
           description = "Bun template.";
         };
+        node = {
+          path = ./templates/node;
+          description = "Node template.";
+        };
+        gleam = {
+          path = ./templates/gleam;
+          description = "Gleam template";
+        };
 
         defaultTemplate = self.templates.base;
       };
