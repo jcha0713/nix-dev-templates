@@ -18,7 +18,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
 
         # Import shared protection logic
-        protection = import ../shared/protection.nix { inherit pkgs; };
+        protection = import ./protection.nix { inherit pkgs; };
 
       in
       {
@@ -39,12 +39,6 @@
 
         # Formatter for `nix fmt`
         formatter = pkgs.nixpkgs-fmt;
-
-        # Expose protection packages
-        packages = protection.packages;
-
-        # Expose protection apps
-        apps = protection.apps;
       }
     );
 }

@@ -1,4 +1,4 @@
-# templates/shared/protection.nix
+# protection.nix
 # Reusable third-party protection logic for all templates
 { pkgs }:
 
