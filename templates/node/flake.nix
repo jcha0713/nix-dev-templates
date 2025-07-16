@@ -102,7 +102,7 @@
             yarn-berry
             node2nix
             jq # For parsing package.json in shellHook
-            
+
             # Helper script to get pnpm hash for new versions
             (writeShellScriptBin "get-pnpm-hash" ''
               if [ -z "$1" ]; then
@@ -110,10 +110,8 @@
                 echo "Example: get-pnpm-hash 9.1.0"
                 exit 1
               fi
-              local version="$1"
-              local url="https://registry.npmjs.org/pnpm/-/pnpm-$version.tgz"
-              echo "Fetching hash for pnpm $version..."
-              nix-prefetch-url "$url"
+              echo "Fetching hash for pnpm $1..."
+              nix-prefetch-url "https://registry.npmjs.org/pnpm/-/pnpm-$1.tgz"
             '')
           ];
 
