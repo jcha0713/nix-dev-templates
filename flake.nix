@@ -5,45 +5,46 @@
     { self, nixpkgs, ... }:
     {
       lib = {
-        protection = { pkgs }:
+        protection =
+          { pkgs }:
           let
             thirdPartyProtection = pkgs.writeShellScript "setup-third-party-protection" ''
-              # Third-party repository protection setup
-              echo "🛡️  Setting up third-party protection..."
+                  # Third-party repository protection setup
+                  echo "🛡️  Setting up third-party protection..."
 
-              # Create pre-commit hook
-              if [ -d .git ] && [ ! -f .git/hooks/pre-commit ]; then
-                mkdir -p .git/hooks
-                cat > .git/hooks/pre-commit << 'HOOK_EOF'
-          #!/usr/bin/env bash
-          if [ "$DVT_THIRD_PARTY" = "true" ] || [ "$NIX_THIRD_PARTY_MODE" = "true" ]; then
-              echo "🔍 Checking for flake files in commit..."
+                  # Create pre-commit hook
+                  if [ -d .git ] && [ ! -f .git/hooks/pre-commit ]; then
+                    mkdir -p .git/hooks
+                    cat > .git/hooks/pre-commit << 'HOOK_EOF'
+              #!/usr/bin/env bash
+              if [ "$DVT_THIRD_PARTY" = "true" ] || [ "$NIX_THIRD_PARTY_MODE" = "true" ]; then
+                  echo "🔍 Checking for flake files in commit..."
 
-              flake_files=$(git diff --cached --name-only | grep -E "(flake\.(nix|lock))$" || true)
-              if [ -n "$flake_files" ]; then
-                  echo "❌ Error: Cannot commit flake files in third-party mode"
-                  echo ""
-                  echo "Files that would be committed:"
-                  echo "$flake_files" | sed 's/^/  - /'
-                  echo ""
-                  echo "To disable protection, run:"
-                  echo "  unset DVT_THIRD_PARTY"
-                  echo "  unset NIX_THIRD_PARTY_MODE"
-                  echo "  git commit"
-                  exit 1
+                  flake_files=$(git diff --cached --name-only | grep -E "(flake\.(nix|lock))$" || true)
+                  if [ -n "$flake_files" ]; then
+                      echo "❌ Error: Cannot commit flake files in third-party mode"
+                      echo ""
+                      echo "Files that would be committed:"
+                      echo "$flake_files" | sed 's/^/  - /'
+                      echo ""
+                      echo "To disable protection, run:"
+                      echo "  unset DVT_THIRD_PARTY"
+                      echo "  unset NIX_THIRD_PARTY_MODE"
+                      echo "  git commit"
+                      exit 1
+                  fi
+                  echo "✅ No flake files in commit"
               fi
-              echo "✅ No flake files in commit"
-          fi
-          HOOK_EOF
-                chmod +x .git/hooks/pre-commit
-                echo "✅ Pre-commit hook installed"
-              fi
+              HOOK_EOF
+                    chmod +x .git/hooks/pre-commit
+                    echo "✅ Pre-commit hook installed"
+                  fi
 
-              # Hide flake files from git status
-              if [ -d .git ]; then
-                git update-index --assume-unchanged flake.nix flake.lock 2>/dev/null || true
-                echo "✅ Flake files hidden from git status"
-              fi
+                  # Hide flake files from git status
+                  if [ -d .git ]; then
+                    git update-index --assume-unchanged flake.nix flake.lock 2>/dev/null || true
+                    echo "✅ Flake files hidden from git status"
+                  fi
             '';
 
           in
