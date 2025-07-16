@@ -42,7 +42,7 @@
 
                   # Hide flake files from git status
                   if [ -d .git ]; then
-                    git update-index --assume-unchanged flake.nix flake.lock 2>/dev/null || true
+                    git update-index --skip-worktree flake.nix flake.lock 2>/dev/null || true
                     echo "✅ Flake files hidden from git status"
                   fi
             '';
