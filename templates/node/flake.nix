@@ -102,28 +102,27 @@
             yarn-berry
             node2nix
             jq # For parsing package.json in shellHook
-          ];
-
-          shellHook = ''
-            echo "🚀 Node.js development environment loaded"
-            echo "📦 Node.js $(node --version)"
-            echo "📦 pnpm $(pnpm --version)"
-            echo "📦 yarn $(yarn --version)"
-
-            # Helper function to get pnpm hash for new versions
-            get-pnpm-hash() {
+            
+            # Helper script to get pnpm hash for new versions
+            (writeShellScriptBin "get-pnpm-hash" ''
               if [ -z "$1" ]; then
                 echo "Usage: get-pnpm-hash <version>"
                 echo "Example: get-pnpm-hash 9.1.0"
-                return 1
+                exit 1
               fi
               local version="$1"
               local url="https://registry.npmjs.org/pnpm/-/pnpm-$version.tgz"
               echo "Fetching hash for pnpm $version..."
               nix-prefetch-url "$url"
-            }
+            '')
+          ];
 
+          shellHook = ''
+            echo "🚀 Node.js development environment loaded"
             ${protection.setupHook}
+            echo "📦 Node.js $(node --version)"
+            echo "📦 pnpm $(pnpm --version)"
+            echo "📦 yarn $(yarn --version)"
 
             ${
               if (builtins.pathExists ./package.json) then
