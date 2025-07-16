@@ -16,14 +16,6 @@ direnv allow
 
 ## Third-party protection
 
-Toggle protection on/off:
-
-```bash
-./toggle-protection.sh
-```
-
-or set it explicitly:
-
 ```bash
 export DVT_THIRD_PARTY=true   # Enable protection
 export DVT_THIRD_PARTY=false  # Disable protection
