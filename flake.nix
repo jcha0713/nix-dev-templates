@@ -61,11 +61,6 @@
                 return
               fi
 
-              # Load local environment if it exists
-              if [ -f .envrc.local ]; then
-                source .envrc.local
-              fi
-
               # Set up protection if in third-party mode
               if [ "$DVT_THIRD_PARTY" = "true" ]; then
                 export NIX_THIRD_PARTY_MODE=true
