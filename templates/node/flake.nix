@@ -109,7 +109,7 @@
             ${protection.setupHook}
             echo "📦 Node.js $(node --version)"
             echo "📦 pnpm $(pnpm --version)"
-            echo "📦 yarn $(yarn-berry --version)"
+            echo "📦 yarn $(yarn --version)"
 
             # Helper function to get pnpm hash for new versions
             get-pnpm-hash() {
