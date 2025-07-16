@@ -44,29 +44,6 @@
                 git update-index --assume-unchanged flake.nix flake.lock 2>/dev/null || true
                 echo "✅ Flake files hidden from git status"
               fi
-              
-              # Create convenience script to toggle protection
-              cat > toggle-protection.sh << 'TOGGLE_EOF'
-          #!/usr/bin/env bash
-          if [ "$DVT_THIRD_PARTY" = "true" ]; then
-              echo "🔓 Disabling third-party protection..."
-              unset DVT_THIRD_PARTY
-              unset NIX_THIRD_PARTY_MODE
-              git update-index --no-assume-unchanged flake.nix flake.lock 2>/dev/null || true
-              echo "export DVT_THIRD_PARTY=false" > .envrc.local
-              echo "✅ Protection disabled - you can now commit flake files"
-          else
-              echo "🔒 Enabling third-party protection..."
-              export DVT_THIRD_PARTY=true
-              export NIX_THIRD_PARTY_MODE=true
-              git update-index --assume-unchanged flake.nix flake.lock 2>/dev/null || true
-              echo "export DVT_THIRD_PARTY=true" > .envrc.local
-              echo "export NIX_THIRD_PARTY_MODE=true" >> .envrc.local
-              echo "✅ Protection enabled - flake files are protected from commits"
-          fi
-          TOGGLE_EOF
-              chmod +x toggle-protection.sh
-              echo "✅ Toggle script created: ./toggle-protection.sh"
             '';
 
           in
@@ -96,20 +73,12 @@
                 echo ""
                 echo "🛡️  Third-party protection is ACTIVE"
                 echo "   • Flake files are protected from commits"
-                echo "   • Use ./toggle-protection.sh to disable"
+                echo "   • To disable: unset DVT_THIRD_PARTY"
               else
                 echo ""
                 echo "🏠 Own repository mode"
                 echo "   • Flake files can be committed normally"
-                echo "   • Use ./toggle-protection.sh to enable protection"
-              fi
-
-              echo ""
-              echo "💡 Use ./toggle-protection.sh to toggle protection mode"
-
-              # Create toggle script if it doesn't exist
-              if [ ! -f toggle-protection.sh ]; then
-                ${thirdPartyProtection}
+                echo "   • To enable protection: export DVT_THIRD_PARTY=true"
               fi
             '';
 
