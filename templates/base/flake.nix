@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    nix-dev-templates.url = "github:jcha0713/nix-dev-templates";
   };
 
   outputs =
@@ -11,14 +12,15 @@
       self,
       nixpkgs,
       flake-utils,
+      nix-dev-templates,
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        # Import shared protection logic
-        protection = import ./protection.nix { inherit pkgs; };
+        # Use shared protection logic from root flake
+        protection = nix-dev-templates.lib.protection { inherit pkgs; };
 
       in
       {
