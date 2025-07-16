@@ -106,7 +106,6 @@
 
           shellHook = ''
             echo "🚀 Node.js development environment loaded"
-            ${protection.setupHook}
             echo "📦 Node.js $(node --version)"
             echo "📦 pnpm $(pnpm --version)"
             echo "📦 yarn $(yarn --version)"
@@ -123,6 +122,8 @@
               echo "Fetching hash for pnpm $version..."
               nix-prefetch-url "$url"
             }
+
+            ${protection.setupHook}
 
             ${
               if (builtins.pathExists ./package.json) then
