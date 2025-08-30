@@ -110,6 +110,10 @@
           path = ./templates/gleam;
           description = "Gleam template";
         };
+        gleam-dev = {
+          path = ./templates/gleam-dev;
+          description = "Gleam Core development environment";
+        };
 
         defaultTemplate = self.templates.base;
       };
