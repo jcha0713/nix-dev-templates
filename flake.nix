@@ -1,9 +1,58 @@
 {
   description = "My Collection of Nix Flake Templates";
 
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
   outputs =
-    { self, nixpkgs, ... }:
-    {
+    { self, nixpkgs, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+      {
+        devShells = {
+          gleam-dev = pkgs.mkShell {
+            buildInputs = with pkgs; [
+              bun
+              erlang_28
+              nodejs
+              rebar3
+              rustup
+            ];
+
+            shellHook = ''
+              echo "🚀 Development environment loaded"
+
+              # Early return if no .git directory (must be own repo)
+              if [ ! -d .git ]; then
+                echo ""
+                echo "🏠 Own repository mode (no .git directory)"
+                echo "   • Flake files can be committed normally"
+                return
+              fi
+
+              # Set up protection if in third-party mode
+              if [ "$DVT_THIRD_PARTY" = "true" ]; then
+                export NIX_THIRD_PARTY_MODE=true
+                echo ""
+                echo "🛡️  Third-party protection is ACTIVE"
+                echo "   • Flake files are protected from commits"
+                echo "   • To disable: unset DVT_THIRD_PARTY"
+              else
+                echo ""
+                echo "🏠 Own repository mode"
+                echo "   • Flake files can be committed normally"
+                echo "   • To enable protection: export DVT_THIRD_PARTY=true"
+              fi
+            '';
+
+            NIX_SHELL_PRESERVE_PROMPT = "1";
+          };
+        };
+      }) // {
       lib = {
         protection =
           { pkgs }:
