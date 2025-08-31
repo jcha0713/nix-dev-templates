@@ -16,6 +16,7 @@
         devShells = {
           gleam-dev = pkgs.mkShell {
             buildInputs = with pkgs; [
+              beam28Packages.elixir
               bun
               erlang_28
               nodejs
