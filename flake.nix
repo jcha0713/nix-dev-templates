@@ -7,8 +7,14 @@
   };
 
   outputs =
-    { self, nixpkgs, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      ...
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
       in
@@ -53,7 +59,9 @@
             NIX_SHELL_PRESERVE_PROMPT = "1";
           };
         };
-      }) // {
+      }
+    )
+    // {
       lib = {
         protection =
           { pkgs }:
