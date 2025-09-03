@@ -17,52 +17,134 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+
+        # Use shared template configurations
+        templateConfigs = self.lib.getTemplateConfigs { inherit pkgs; };
+        mkTemplateShell = self.lib.mkTemplateShell { inherit pkgs; };
       in
       {
         devShells = {
-          gleam-dev = pkgs.mkShell {
-            buildInputs = with pkgs; [
-              beam28Packages.elixir
-              bun
-              erlang_28
-              nodejs
-              rebar3
-              rustup
-            ];
-
-            shellHook = ''
-              echo "🚀 Development environment loaded"
-
-              # Early return if no .git directory (must be own repo)
-              if [ ! -d .git ]; then
-                echo ""
-                echo "🏠 Own repository mode (no .git directory)"
-                echo "   • Flake files can be committed normally"
-                return
-              fi
-
-              # Set up protection if in third-party mode
-              if [ "$DVT_THIRD_PARTY" = "true" ]; then
-                export NIX_THIRD_PARTY_MODE=true
-                echo ""
-                echo "🛡️  Third-party protection is ACTIVE"
-                echo "   • Flake files are protected from commits"
-                echo "   • To disable: unset DVT_THIRD_PARTY"
-              else
-                echo ""
-                echo "🏠 Own repository mode"
-                echo "   • Flake files can be committed normally"
-                echo "   • To enable protection: export DVT_THIRD_PARTY=true"
-              fi
-            '';
-
-            NIX_SHELL_PRESERVE_PROMPT = "1";
-          };
+          default = mkTemplateShell "base" templateConfigs.base;
+          base = mkTemplateShell "base" templateConfigs.base;
+          bun = mkTemplateShell "bun" templateConfigs.bun;
+          node = mkTemplateShell "node" templateConfigs.node;
+          gleam = mkTemplateShell "gleam" templateConfigs.gleam;
+          gleam-dev = mkTemplateShell "gleam-dev" templateConfigs.gleam-dev;
         };
       }
     )
     // {
       lib = {
+        # Export template configuration function
+        getTemplateConfigs = { pkgs }: {
+          base = {
+            buildInputs = with pkgs; [ ];
+            shellMessage = "🚀 Base development environment loaded";
+            versionInfo = "";
+          };
+
+          bun = {
+            buildInputs = with pkgs; [ bun ];
+            shellMessage = "🚀 Bun development environment loaded";
+            versionInfo = "echo \"🍞 Bun $(bun --version) ready\"";
+          };
+
+          node = {
+            buildInputs = with pkgs; [ 
+              nodejs_20 
+              pnpm 
+              yarn-berry 
+              node2nix 
+              jq
+              # Helper script to get pnpm hash for new versions
+              (pkgs.writeShellScriptBin "get-pnpm-hash" ''
+                if [ -z "$1" ]; then
+                  echo "Usage: get-pnpm-hash <version>"
+                  echo "Example: get-pnpm-hash 9.1.0"
+                  exit 1
+                fi
+                echo "Fetching hash for pnpm $1..."
+                nix-prefetch-url "https://registry.npmjs.org/pnpm/-/pnpm-$1.tgz"
+              '')
+            ];
+            shellMessage = "🚀 Node.js development environment loaded";
+            versionInfo = ''
+              echo "📦 Node.js $(node --version)"
+              echo "📦 pnpm $(pnpm --version)"
+              echo "📦 yarn $(yarn --version)"
+
+              ${
+                if (builtins.pathExists ./package.json) then
+                  ''
+                    echo "📄 Detected package.json"
+                    if [[ -f package.json ]] && command -v jq >/dev/null 2>&1; then
+                      packageManager=$(jq -r '.packageManager // "not specified"' package.json)
+                      echo "📋 Package manager: $packageManager"
+                    fi
+                  ''
+                else
+                  ''
+                    echo "📄 No package.json found - run 'npm init' or 'pnpm init' to create one"
+                  ''
+              }
+
+              echo ""
+              echo "💡 To add a new pnpm version hash:"
+              echo "   1. Run: get-pnpm-hash <version>"  
+              echo "   2. Add the hash to pnpmHashes in flake.nix"
+            '';
+          };
+
+          gleam = {
+            buildInputs = with pkgs; [ gleam erlang rebar3 nodejs ];
+            shellMessage = "✨ Gleam development environment loaded";
+            versionInfo = ''
+              echo "📦 Gleam $(gleam --version)"
+              echo "📦 Node.js $(node --version)"
+            '';
+          };
+
+          gleam-dev = {
+            buildInputs = with pkgs; [ pkgs.beam28Packages.elixir bun erlang_28 nodejs rebar3 rustup ];
+            shellMessage = "🚀 Gleam Core development environment loaded";
+            versionInfo = "";
+          };
+        };
+
+        # Export helper function for creating shells with shared protection logic
+        mkTemplateShell = { pkgs }: name: config: pkgs.mkShell {
+          buildInputs = config.buildInputs;
+
+          shellHook = ''
+            echo "${config.shellMessage}"
+            ${config.versionInfo}
+
+            # Early return if no .git directory (must be own repo)
+            if [ ! -d .git ]; then
+              echo ""
+              echo "🏠 Own repository mode (no .git directory)"
+              echo "   • Flake files can be committed normally"
+              return
+            fi
+
+            # Set up protection if in third-party mode
+            if [ "$DVT_THIRD_PARTY" = "true" ]; then
+              export NIX_THIRD_PARTY_MODE=true
+              echo ""
+              echo "🛡️  Third-party protection is ACTIVE"
+              echo "   • Flake files are protected from commits"
+              echo "   • To disable: unset DVT_THIRD_PARTY"
+            else
+              echo ""
+              echo "🏠 Own repository mode"
+              echo "   • Flake files can be committed normally"
+              echo "   • To enable protection: export DVT_THIRD_PARTY=true"
+            fi
+          '';
+
+          NIX_SHELL_PRESERVE_PROMPT = "1";
+        };
+
         protection =
           { pkgs }:
           let

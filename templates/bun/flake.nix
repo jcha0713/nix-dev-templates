@@ -59,19 +59,11 @@
         protection = nix-dev-templates.lib.protection { inherit pkgs; };
       in
       {
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            bun
-          ];
-
-          shellHook = ''
-            echo "🚀 Bun development environment loaded"
-            ${protection.setupHook}
-            echo "🍞 Bun $(bun --version) ready"
-          '';
-
-          NIX_SHELL_PRESERVE_PROMPT = "1";
-        };
+        devShells.default = let
+          templateConfigs = nix-dev-templates.lib.getTemplateConfigs { inherit pkgs; };
+          mkTemplateShell = nix-dev-templates.lib.mkTemplateShell { inherit pkgs; };
+        in
+          mkTemplateShell "bun" templateConfigs.bun;
       }
     );
 }

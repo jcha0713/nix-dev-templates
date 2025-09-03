@@ -19,31 +19,12 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         
-        # Use shared protection logic from root flake
-        protection = nix-dev-templates.lib.protection { inherit pkgs; };
+        # Use shared template configurations and shell builder
+        templateConfigs = nix-dev-templates.lib.getTemplateConfigs { inherit pkgs; };
+        mkTemplateShell = nix-dev-templates.lib.mkTemplateShell { inherit pkgs; };
       in
       {
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            gleam
-            erlang
-            rebar3
-            # Optional: JavaScript runtime for JS target
-            nodejs
-            # Optional: Alternative JS runtime
-            # deno
-          ];
-
-          shellHook = ''
-            echo "✨ Gleam development environment loaded"
-            ${protection.setupHook}
-            echo "📦 Gleam $(gleam --version)"
-            echo "📦 Erlang $(erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell)"
-            echo "📦 Node.js $(node --version)"
-          '';
-
-          NIX_SHELL_PRESERVE_PROMPT = "1";
-        };
+        devShells.default = mkTemplateShell "gleam" templateConfigs.gleam;
 
         formatter = pkgs.nixpkgs-fmt;
 

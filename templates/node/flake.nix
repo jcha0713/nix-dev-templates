@@ -15,6 +15,7 @@
       nix-dev-templates,
     }:
     let
+      # Define overlay outside of eachDefaultSystem so it can be exposed globally
       overlay =
         final: prev:
         let
@@ -91,65 +92,17 @@
           overlays = [ overlay ];
         };
 
-        # Use shared protection logic from root flake
-        protection = nix-dev-templates.lib.protection { inherit pkgs; };
+        # Use shared template configurations and shell builder
+        templateConfigs = nix-dev-templates.lib.getTemplateConfigs { inherit pkgs; };
+        mkTemplateShell = nix-dev-templates.lib.mkTemplateShell { inherit pkgs; };
       in
       {
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            nodejs
-            pnpm
-            yarn-berry
-            node2nix
-            jq # For parsing package.json in shellHook
-
-            # Helper script to get pnpm hash for new versions
-            (writeShellScriptBin "get-pnpm-hash" ''
-              if [ -z "$1" ]; then
-                echo "Usage: get-pnpm-hash <version>"
-                echo "Example: get-pnpm-hash 9.1.0"
-                exit 1
-              fi
-              echo "Fetching hash for pnpm $1..."
-              nix-prefetch-url "https://registry.npmjs.org/pnpm/-/pnpm-$1.tgz"
-            '')
-          ];
-
-          shellHook = ''
-            echo "🚀 Node.js development environment loaded"
-            ${protection.setupHook}
-            echo "📦 Node.js $(node --version)"
-            echo "📦 pnpm $(pnpm --version)"
-            echo "📦 yarn $(yarn --version)"
-
-            ${
-              if (builtins.pathExists ./package.json) then
-                ''
-                  echo "📄 Detected package.json"
-                  if [[ -f package.json ]] && command -v jq >/dev/null 2>&1; then
-                    packageManager=$(jq -r '.packageManager // "not specified"' package.json)
-                    echo "📋 Package manager: $packageManager"
-                  fi
-                ''
-              else
-                ''
-                  echo "📄 No package.json found - run 'npm init' or 'pnpm init' to create one"
-                ''
-            }
-
-            echo ""
-            echo "💡 To add a new pnpm version hash:"
-            echo "   1. Run: get-pnpm-hash <version>"  
-            echo "   2. Add the hash to pnpmHashes in flake.nix"
-          '';
-
-          NIX_SHELL_PRESERVE_PROMPT = "1";
-        };
-
-        # Expose the overlay for reuse
-        overlays.default = overlay;
+        devShells.default = mkTemplateShell "node" templateConfigs.node;
 
         formatter = pkgs.nixpkgs-fmt;
       }
-    );
+    ) // {
+      # Expose the overlay for reuse
+      overlays.default = overlay;
+    };
 }

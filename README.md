@@ -1,16 +1,28 @@
 # Nix dev templates
 
-## Quick Start
+## Usage Methods
+
+### Method 1: Remote flake (recommended)
+
+Add to `.envrc`:
+
+```bash
+use flake github:jcha0713/nix-dev-templates#<template>
+```
+
+Example:
+
+```bash
+echo "use flake github:jcha0713/nix-dev-templates#node" > .envrc
+direnv allow
+```
+
+### Method 2: Local flake
 
 Initialize the template:
 
 ```bash
 nix flake init -t github:jcha0713/nix-dev-templates#base
-```
-
-Allow direnv:
-
-```bash
 direnv allow
 ```
 
